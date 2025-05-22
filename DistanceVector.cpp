@@ -29,25 +29,24 @@ void loadInput(const string& filename) {
     char a, b;
     int c;
     ifstream rfile(filename);
-    STATE = GET_EDGE;
+    STATE state = GET_EDGE;
     
 
     if (rfile.is_open()) {
        // Going Through the state machine
        while (getline(rfile, rline)) {
         if (rline.rfind("START", 0) == 0) {
-            STATE = START_GRAPH;
+            state = START_GRAPH;
             continue;
-        } else if (line.rfind("UPDATE", 0) == 0) {
+        } else if (rline.rfind("UPDATE", 0) == 0) {
             state = UPDATE_GRAPH;
             continue;
-        } else if (line.rfind("END", 0) == 0) {
+        } else if (rline.rfind("END", 0) == 0) {
             break;
         }
 
-        istringstream splitline(line);
-        char a, b;
-        int c;
+        istringstream splitline(rline);
+
 
         if (state == GET_EDGE) {
             if (splitline >> r) {
@@ -63,9 +62,19 @@ void loadInput(const string& filename) {
             }
         }
     }
-    file.close();
+    rfile.close();
   } else {
     cout << "ERROR File cannot be opened\n";
     exit(1);
   }
+}
+
+/* Main to read the file from command line*/
+int main (int argc, char* argv[]) {
+    if (argc != 2) {
+        return(1);
+    }
+
+    loadInput(argv[1]);
+    return(0);
 }
