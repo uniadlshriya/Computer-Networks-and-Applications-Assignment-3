@@ -6,6 +6,7 @@
 #include <limits>
 #include <string>
 #include <sstream>
+#include <cstdlib>
 
 using namespace std;
 
@@ -36,7 +37,6 @@ void Init_edges() {
                 distedge[u][v] = INF; /* Initialize other paths to Infinite */
                 nextedge[u][v] = '-';
             }
-            cout << " source " << u << " destination " << v << " cost " << distedge[u][v] << " nextedge " << nextedge[u][v] << "\n";
         }
     }
 }
@@ -44,18 +44,15 @@ void Init_edges() {
 /* Load input from file */
 /* Create FSM based on the data from the file*/
 /* There are 3 main states, and updates needs to be done based on the state*/
-void loadInput(const string& filename) {
+void loadInput() {
     string rline;
     char r;
     char a, b;
     int c;
-    ifstream rfile(filename);
     STATE state = GET_EDGE;
     
-
-    if (rfile.is_open()) {
-       // Going Through the state machine
-       while (getline(rfile, rline)) {
+    // Going Through the state machine
+    while (getline(cin, rline)) {
         if (rline.rfind("START", 0) == 0) {
             state = START_GRAPH;
             continue;
@@ -76,7 +73,7 @@ void loadInput(const string& filename) {
         } else if (state == START_GRAPH || state == UPDATE_GRAPH) {
             // get the weight between 2 routers
             if (splitline >> a >> b >> c) {
-            if (router.find(a) == router.end()) { /* Insert node only if it is not existing*/
+                if (router.find(a) == router.end()) { /* Insert node only if it is not existing*/
                   router.insert(a);
                 }
                 if (router.find(b) == router.end()) {
@@ -92,20 +89,12 @@ void loadInput(const string& filename) {
             }
         }
     }
-    rfile.close();
     Init_edges();
-  } else {
-    cout << "ERROR File cannot be opened\n";
-    exit(1);
-  }
 }
 
 /* Main to read the file from command line*/
-int main (int argc, char* argv[]) {
-    if (argc != 2) {
-        return(1);
-    }
+int main () {
 
-    loadInput(argv[1]);
+    loadInput();
     return(0);
 }
