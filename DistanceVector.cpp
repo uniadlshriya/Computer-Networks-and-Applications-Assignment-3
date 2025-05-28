@@ -91,7 +91,6 @@ void runDistanceVector() {
     int t = 0; /* time t = 0 in the beginning */
     int minDist;
     char nextHop;
-    printDistanceTable(t);
     do {
         t++;
         updated = false;
@@ -142,6 +141,7 @@ void loadInput() {
         } else if (rline.rfind("UPDATE", 0) == 0) {
             state = UPDATE_GRAPH;
             Init_edges();
+            printDistanceTable(0);
             runDistanceVector();
             continue;
         } else if (rline.rfind("END", 0) == 0) {
