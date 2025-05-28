@@ -55,14 +55,10 @@ void printDistanceTable(int t) {
             cout << v << setw(4);
             for (char d : router) {
                 if (d == s) continue;
-                if (costedge[s].count(v) && distedge[v].count(d)) {
                     if (distedge[v][d] == INF)
                         cout << "INF ";
                     else
-                        cout << setw(4) << costedge[s][v] + distedge[v][d] << " "; /* continue printing the new distance */
-                } else {
-                    cout << "INF ";
-                }
+                        cout << setw(4) << distedge[v][d] << " "; /* continue printing the new distance */
             }
             cout << "\n";
         }
