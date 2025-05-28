@@ -1,16 +1,185 @@
-/* code for Distance vector*/
-
-#include <string>
-#include <sstream>
-#include <cstdlib>
 #include <iostream>
 #include <fstream>
+#include <unordered_map>
+#include <map>
+#include <set>
+#include <limits>
+#include <string>
+#include <sstream>
+#include <iomanip>
 
 using namespace std;
 
+const int INF = numeric_limits<int>::max();
+
+unordered_map<char, unordered_map<char, int>> costedge;
+unordered_map<char, unordered_map<char, int>> distedge;
+unordered_map<char, unordered_map<char, char>> nextedge;
+set<char> router;
+
+enum STATE {
+    GET_EDGE,
+    START_GRAPH,
+    UPDATE_GRAPH
+};
+
+/* Initialize dist and nextHop */
+void Init_edges() {
+    for (char u : router) {
+        for (char v : router) {
+            if (u == v) {
+                distedge[u][v] = 0; /* same router */
+                nextedge[u][v] = '-';
+            } else if (costedge[u].count(v)) { /* if there is a value */
+                distedge[u][v] = costedge[u][v]; 
+                nextedge[u][v] = v;
+            } else {
+                distedge[u][v] = INF; /* Initialize other paths to Infinite */
+                nextedge[u][v] = '-';
+            }
+        }
+    }
+}
+
+void printDistanceTable(int t) {
+    for (char s : router) {
+        cout << "Distance Table of router " << s << " at t=" << t << ":\n";
+        cout << "    ";
+        for (char d : router)
+            if (d != s) cout << d ; /* printing the destination router */
+        cout << "\n"; /* insert line */
+
+        for (char v : router) {
+            if (v == s) 
+               continue;
+            cout << v << setw(4);
+            for (char d : router) {
+                if (d == s) continue;
+                if (costedge[s].count(v) && distedge[v].count(d)) {
+                    if (distedge[v][d] == INF)
+                        cout << "INF ";
+                    else
+                        cout << setw(4) << costedge[s][v] + distedge[v][d] << " "; /* continue printing the new distance */
+                } else {
+                    cout << "INF ";
+                }
+            }
+            cout << "\n";
+        }
+        cout << "\n";
+    }
+}
+
+void printRoutingTable() {
+    for (char s : router) {
+        cout << "Routing Table of router " << s << ":\n";
+        for (char d : router) {
+            if (d == s) 
+               continue;
+            if (distedge[s][d] == INF)
+                cout << d << ",INF,INF\n";
+            else
+                cout << d << "," << nextedge[s][d] << "," << distedge[s][d] << "\n";
+        }
+        cout << "\n";
+    }
+}
+
+/* Distance Vector Algorithm */
+void runDistanceVector() {
+    bool updated;
+    int t = 0; /* time t = 0 in the beginning */
+    int minDist;
+    char nextHop;
+    printDistanceTable(t);
+    do {
+        t++;
+        updated = false;
+        for (char a : router) {
+            for (char b : router) {
+                if (a == b) continue;
+                    minDist = distedge[a][b];
+                    nextHop = nextedge[a][b];
+
+                for (char v : router) {
+                    /* check the weight of the routers, if it is less then update the weight */
+                    if (costedge[a].count(v) && distedge[v][b] != INF) {
+                        int newDist = costedge[a][v] + distedge[v][b];
+                        if (newDist < minDist) {
+                            minDist = newDist;
+                            nextHop = v;
+                            updated = true;
+                        }
+                    }
+                }
+
+                distedge[a][b] = minDist;
+                nextedge[a][b] = nextHop;
+            }
+        }
+        printDistanceTable(t);
+
+    } while (updated); /* loop till there are no more updates */
+    printRoutingTable();
+}
+
+
+/* Load input from stdin continue getting till you get END */
+/* Create FSM based on the data from stdin */
+/* There are 3 main states, and updates needs to be done based on the state*/
+void loadInput() {
+    string rline;
+    char r;
+    char a, b;
+    int c;
+    STATE state = GET_EDGE;
+    
+    // Going Through the state machine
+    while (getline(cin, rline)) {
+        if (rline.rfind("START", 0) == 0) {
+            state = START_GRAPH;
+            continue;
+        } else if (rline.rfind("UPDATE", 0) == 0) {
+            state = UPDATE_GRAPH;
+            Init_edges();
+            runDistanceVector();
+            continue;
+        } else if (rline.rfind("END", 0) == 0) {
+            break;
+        }
+
+        istringstream splitline(rline);
+
+        if (state == GET_EDGE) {
+            if (splitline >> r) {
+                router.insert(r);
+            }
+        } else if (state == START_GRAPH || state == UPDATE_GRAPH) {
+            // get the weight between 2 routers
+            if (splitline >> a >> b >> c) {
+                if (router.find(a) == router.end()) { /* Insert node only if it is not existing*/
+                  router.insert(a);
+                }
+                if (router.find(b) == router.end()) {
+                   router.insert(b);
+                }
+                if (c == -1) {
+                  costedge[a].erase(b);
+                  costedge[b].erase(a);  /* Erase weight if it is -1*/
+                } else {
+                  costedge[a][b] = c;
+                  costedge[b][a] = c;
+                }
+            }
+        }
+    }
+    Init_edges();
+    runDistanceVector();
+}
 
 /* Main to read the file from command line*/
 int main () {
-    cout << "Hello World \n";
 
+    loadInput();
+    return(0);
 }
