@@ -51,12 +51,12 @@ void printDistanceTable(int t) {
             if (d != s) cout << d << " ";
         cout << "\n";
 
-        for (char v : router) {
-            if (v == s)
+        for (char d : router) {
+            if (d == s)
                 continue;
-            cout << v << "   ";
-            for (char d : router) {
-                if (d == s) continue;
+            cout << d << "   ";
+            for (char v : router) {
+                if (v == s) continue;
 
                 if (t == 0) {
                     if (v == d && costedge[s].count(d)) {
@@ -152,7 +152,7 @@ void loadInput() {
             costbeforeupdateedge = costedge; /* Storing cost at time T=0*/
             continue;
         } else if (rline.rfind("END", 0) == 0) {
-            costafterupdateedge = costedge /* Storing cost at time t=1 this will be used for processing later*/;
+            costafterupdateedge = costedge; /* Storing cost at time t=1 this will be used for processing later*/;
             break;
         }
 
