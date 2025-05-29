@@ -11,6 +11,9 @@ using namespace std;
 const int INF = numeric_limits<int>::max();
 
 unordered_map<char, unordered_map<char, int>> costedge;
+/* added 2 unordered map for costs before update and cost after update*/
+unordered_map<char, unordered_map<char, int>> costbeforeupdateedge;
+unordered_map<char, unordered_map<char, int>> costafterupdateedge;
 unordered_map<char, unordered_map<char, int>> distedge;
 unordered_map<char, unordered_map<char, char>> nextedge;
 set<char> router;
@@ -26,19 +29,20 @@ void Init_edges() {
     for (char u : router) {
         for (char v : router) {
             if (u == v) {
-                distedge[u][v] = 0; /* same router */
+                distedge[u][v] = 0;
                 nextedge[u][v] = '-';
-            } else if (costedge[u].count(v)) { /* if there is a direct edge */
+            } else if (costedge[u].count(v)) {
                 distedge[u][v] = costedge[u][v];
                 nextedge[u][v] = v;
             } else {
-                distedge[u][v] = INF; /* Initialize other paths to Infinite */
+                distedge[u][v] = INF;
                 nextedge[u][v] = '-';
             }
         }
     }
 }
 
+/* Print distance table at time t */
 void printDistanceTable(int t) {
     for (char s : router) {
         cout << "Distance Table of router " << s << " at t=" << t << ":\n";
@@ -48,20 +52,19 @@ void printDistanceTable(int t) {
         cout << "\n";
 
         for (char v : router) {
-            if (v == s) continue;
+            if (v == s)
+                continue;
             cout << v << "   ";
             for (char d : router) {
                 if (d == s) continue;
 
                 if (t == 0) {
-                    // At t=0 print only direct edge cost from s to d, else INF
                     if (v == d && costedge[s].count(d)) {
                         cout << setw(3) << costedge[s][d] << " ";
                     } else {
                         cout << "INF ";
                     }
                 } else {
-                    // For t>0 show cost through neighbor v: cost(s->v) + dist(v->d)
                     if (costedge[s].count(v) && distedge[v].count(d)) {
                         if (distedge[v][d] == INF)
                             cout << "INF ";
@@ -78,11 +81,13 @@ void printDistanceTable(int t) {
     }
 }
 
+/* Print final routing table */
 void printRoutingTable() {
     for (char s : router) {
         cout << "Routing Table of router " << s << ":\n";
         for (char d : router) {
-            if (d == s) continue;
+            if (d == s)
+                continue;
             if (distedge[s][d] == INF)
                 cout << d << ",INF,INF\n";
             else
@@ -95,18 +100,19 @@ void printRoutingTable() {
 /* Distance Vector Algorithm */
 void runDistanceVector() {
     bool updated;
-    int t = 0; /* time t = 0 in the beginning */
-    int minDist;
-    char nextHop;
-    printDistanceTable(t);
+    int t = 0;
+    /*printDistanceTable(t); */
+
     do {
         t++;
         updated = false;
+
         for (char a : router) {
             for (char b : router) {
                 if (a == b) continue;
-                minDist = distedge[a][b];
-                nextHop = nextedge[a][b];
+
+                int minDist = distedge[a][b];
+                char nextHop = nextedge[a][b];
 
                 for (char v : router) {
                     if (costedge[a].count(v) && distedge[v][b] != INF) {
@@ -124,16 +130,16 @@ void runDistanceVector() {
             }
         }
         printDistanceTable(t);
-
     } while (updated);
+
     printRoutingTable();
 }
-
-/* Load input from stdin and process states */
+/* Load input from stdin continue getting till you get END */
+/* Create FSM based on the data from stdin */
+/* There are 3 main states, and updates needs to be done based on the state*/
 void loadInput() {
     string rline;
-    char r;
-    char a, b;
+    char r, a, b;
     int c;
     STATE state = GET_EDGE;
 
@@ -142,12 +148,11 @@ void loadInput() {
             state = START_GRAPH;
             continue;
         } else if (rline.rfind("UPDATE", 0) == 0) {
-            // Before applying updates, run DV on current graph and print results
-            Init_edges();
-            runDistanceVector();
             state = UPDATE_GRAPH;
+            costbeforeupdateedge = costedge; /* Storing cost at time T=0*/
             continue;
         } else if (rline.rfind("END", 0) == 0) {
+            costafterupdateedge = costedge /* Storing cost at time t=1 this will be used for processing later*/;
             break;
         }
 
@@ -159,9 +164,8 @@ void loadInput() {
             }
         } else if (state == START_GRAPH || state == UPDATE_GRAPH) {
             if (splitline >> a >> b >> c) {
-                if (router.find(a) == router.end()) router.insert(a);
-                if (router.find(b) == router.end()) router.insert(b);
-
+                router.insert(a);
+                router.insert(b);
                 if (c == -1) {
                     costedge[a].erase(b);
                     costedge[b].erase(a);
@@ -173,12 +177,17 @@ void loadInput() {
         }
     }
 
-    // After all input processed, run DV on final graph and print results
+    costedge = costbeforeupdateedge;
+    Init_edges();
+    printDistanceTable(0);
+    costedge = costafterupdateedge;
     Init_edges();
     runDistanceVector();
 }
 
-int main () {
+/* Main */
+int main() {
     loadInput();
     return 0;
 }
+
