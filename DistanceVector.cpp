@@ -1,5 +1,6 @@
 #include <iostream>
 #include <unordered_map>
+#include <vector>
 #include <set>
 #include <limits>
 #include <string>
@@ -11,11 +12,12 @@ using namespace std;
 const int INF = numeric_limits<int>::max();
 
 unordered_map<char, unordered_map<char, int>> costedge;
-/* added 2 unordered map for costs before update and cost after update*/
+/* added 2 unordered map for costs before update and cost after update
 unordered_map<char, unordered_map<char, int>> costbeforeupdateedge;
-unordered_map<char, unordered_map<char, int>> costafterupdateedge;
+unordered_map<char, unordered_map<char, int>> costafterupdateedge; */
 unordered_map<char, unordered_map<char, int>> distedge;
 unordered_map<char, unordered_map<char, char>> nextedge;
+vector<unordered_map<char, unordered_map<char, int>>> costvector;
 set<char> router;
 
 enum STATE {
@@ -155,7 +157,6 @@ void loadInput() {
             printDistanceTable(0);
             continue;
         } else if (rline.rfind("END", 0) == 0) {
-            costafterupdateedge = costedge; /* Storing cost at time t=1 this will be used for processing later*/;
             break;
         }
 
@@ -177,15 +178,19 @@ void loadInput() {
                     costedge[b][a] = c;
                 }
                 if (state == UPDATE_GRAPH) {
-                    t++;
-                    distedge.clear();
-                    nextedge.clear();
-                    Init_edges();
-                    runDistanceVector(t);
+                    costvector.push_back(costedge);
                 }
             }
         }
     }
+    for (std::size_t i = 0; i < costvector.size(); i++)
+    {
+        t++;
+        costedge = costvector[i];
+        Init_edges();
+        runDistanceVector(t);
+    }
+
 }
 
 /* Main */
