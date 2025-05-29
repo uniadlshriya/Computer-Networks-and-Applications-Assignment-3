@@ -51,12 +51,12 @@ void printDistanceTable(int t) {
             if (d != s) cout << d << " ";
         cout << "\n";
 
-        for (char d : router) {
-            if (d == s)
+        for (char v : router) {
+            if (v == s)
                 continue;
-            cout << d << "   ";
-            for (char v : router) {
-                if (v == s) continue;
+            cout << v << "   ";
+            for (char d : router) {
+                if (d == s) continue;
 
                 if (t == 0) {
                     if (v == d && costedge[s].count(d)) {
@@ -65,11 +65,13 @@ void printDistanceTable(int t) {
                         cout << "INF ";
                     }
                 } else {
+                    // Only consider if v is a neighbor of s
                     if (costedge[s].count(v) && distedge[v].count(d)) {
-                        if (distedge[v][d] == INF)
+                        int dist = (distedge[v][d] == INF) ? INF : costedge[s][v] + distedge[v][d];
+                        if (dist == INF)
                             cout << "INF ";
                         else
-                            cout << setw(3) << costedge[s][v] + distedge[v][d] << " ";
+                            cout << setw(3) << dist << " ";
                     } else {
                         cout << "INF ";
                     }
@@ -98,13 +100,11 @@ void printRoutingTable() {
 }
 
 /* Distance Vector Algorithm */
-void runDistanceVector() {
+void runDistanceVector(int t) {
     bool updated;
-    int t = 0;
-    /*printDistanceTable(t); */
+    /*printDistanceTable(t); */ 
 
     do {
-        t++;
         updated = false;
 
         for (char a : router) {
@@ -141,15 +141,20 @@ void loadInput() {
     string rline;
     char r, a, b;
     int c;
+    int t = 0;
     STATE state = GET_EDGE;
-
+   
     while (getline(cin, rline)) {
         if (rline.rfind("START", 0) == 0) {
             state = START_GRAPH;
             continue;
         } else if (rline.rfind("UPDATE", 0) == 0) {
             state = UPDATE_GRAPH;
-            costbeforeupdateedge = costedge; /* Storing cost at time T=0*/
+            /*costbeforeupdateedge = costedge;  Storing cost at time T=0*/
+            distedge.clear();
+            nextedge.clear();
+            Init_edges();
+            printDistanceTable(0);
             continue;
         } else if (rline.rfind("END", 0) == 0) {
             costafterupdateedge = costedge; /* Storing cost at time t=1 this will be used for processing later*/;
@@ -173,16 +178,16 @@ void loadInput() {
                     costedge[a][b] = c;
                     costedge[b][a] = c;
                 }
+                if (state == UPDATE_GRAPH) {
+                    t++;
+                    distedge.clear();
+                    nextedge.clear();
+                    Init_edges();
+                    runDistanceVector(t);
+                }
             }
         }
     }
-
-    costedge = costbeforeupdateedge;
-    Init_edges();
-    printDistanceTable(0);
-    costedge = costafterupdateedge;
-    Init_edges();
-    runDistanceVector();
 }
 
 /* Main */
