@@ -1,7 +1,5 @@
 #include <iostream>
-#include <fstream>
 #include <unordered_map>
-#include <map>
 #include <set>
 #include <limits>
 #include <string>
@@ -46,19 +44,34 @@ void printDistanceTable(int t) {
         cout << "Distance Table of router " << s << " at t=" << t << ":\n";
         cout << "    ";
         for (char d : router)
-            if (d != s) cout << d ; /* printing the destination router */
-        cout << "\n"; /* insert line */
+            if (d != s) cout << d << " ";
+        cout << "\n";
 
         for (char v : router) {
-            if (v == s) 
-               continue;
-            cout << v << setw(4);
+            if (v == s)
+                continue;
+            cout << v << "   ";
             for (char d : router) {
                 if (d == s) continue;
-                    if (distedge[v][d] == INF)
+
+                // Only print direct costs at t = 0
+                if (t == 0) {
+                    if (v == d && costedge[s].count(d)) {
+                        cout << setw(3) << costedge[s][d] << " ";
+                    } else {
                         cout << "INF ";
-                    else
-                        cout << setw(4) << distedge[v][d] << " "; /* continue printing the new distance */
+                    }
+                } else {
+                    // For t > 0, show updated paths via neighbors
+                    if (costedge[s].count(v) && distedge[v].count(d)) {
+                        if (distedge[v][d] == INF)
+                            cout << "INF ";
+                        else
+                            cout << setw(3) << costedge[s][v] + distedge[v][d] << " ";
+                    } else {
+                        cout << "INF ";
+                    }
+                }
             }
             cout << "\n";
         }
@@ -87,6 +100,7 @@ void runDistanceVector() {
     int t = 0; /* time t = 0 in the beginning */
     int minDist;
     char nextHop;
+    printDistanceTable(t);
     do {
         t++;
         updated = false;
@@ -136,9 +150,8 @@ void loadInput() {
             continue;
         } else if (rline.rfind("UPDATE", 0) == 0) {
             state = UPDATE_GRAPH;
-            Init_edges();
-            printDistanceTable(0);
-            runDistanceVector();
+            /*Init_edges();
+            runDistanceVector(); */
             continue;
         } else if (rline.rfind("END", 0) == 0) {
             break;
