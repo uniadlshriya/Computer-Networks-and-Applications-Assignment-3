@@ -124,14 +124,12 @@ void runDistanceVector(int t) {
                         }
                     }
                 }
-
                 distedge[a][b] = minDist;
                 nextedge[a][b] = nextHop;
             }
         }
-        printDistanceTable(t);
     } while (updated);
-
+    printDistanceTable(t);
     printRoutingTable();
 }
 /* Load input from stdin continue getting till you get END */
