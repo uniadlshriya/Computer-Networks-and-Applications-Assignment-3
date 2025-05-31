@@ -53,11 +53,12 @@ void printDistanceTable(int t) {
             if (d != s) cout << d << "    ";
         cout << "\n\n";
 
-        for (char v : router) {
-            if (v == s) continue;
-            cout << v << "    ";
-            for (char d : router) {
-                if (d == s) continue;
+        for (char d : router) {
+            if (d == s) continue;
+                cout << d << "    ";
+            
+            for (char v : router) {
+                if (v == s) continue;
 
                 if (t == 0) {
                     if (v == d && costedge[s].count(d)) {
@@ -142,10 +143,10 @@ void loadInput() {
         } else if (rline.rfind("UPDATE", 0) == 0) {
             state = UPDATE_GRAPH;
             /*costbeforeupdateedge = costedge;  Storing cost at time T=0*/
-            distedge.clear();
+            /* distedge.clear();
             nextedge.clear();
             Init_edges();
-            printDistanceTable(0);
+            printDistanceTable(0); */
             costvector.push_back(costedge);
             continue;
         } else if (rline.rfind("END", 0) == 0) {
@@ -176,6 +177,12 @@ void loadInput() {
     }
     for (std::size_t i = 0; i < costvector.size(); i++)
     {
+        if (t == 0) {
+            distedge.clear();
+            nextedge.clear();
+            Init_edges();
+            printDistanceTable(t);
+        }
         t++;
         costedge = costvector[i];
         runDistanceVector(t);
