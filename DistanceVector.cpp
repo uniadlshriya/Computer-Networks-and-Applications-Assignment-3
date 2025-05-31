@@ -44,46 +44,42 @@ void Init_edges() {
     }
 }
 
-/* Print distance table at time t */
+// Print distance table for each router
 void printDistanceTable(int t) {
     for (char s : router) {
         cout << "Distance Table of router " << s << " at t=" << t << ":\n";
-        cout << "    ";
+        cout << "     ";
         for (char d : router)
-            if (d != s) cout << d << " ";
-        cout << "\n";
+            if (d != s) cout << d << "    ";
+        cout << "\n\n";
 
         for (char v : router) {
-            if (v == s)
-                continue;
-            cout << v << "   ";
+            if (v == s) continue;
+            cout << v << "    ";
             for (char d : router) {
                 if (d == s) continue;
 
                 if (t == 0) {
                     if (v == d && costedge[s].count(d)) {
-                        cout << setw(3) << costedge[s][d] << " ";
+                        cout << setw(3) << costedge[s][d] << "  ";
                     } else {
-                        cout << "INF ";
+                        cout << "INF  ";
                     }
                 } else {
-                    // Only consider if v is a neighbor of s
-                    if (costedge[s].count(v) && distedge[v].count(d)) {
-                        int dist = (distedge[v][d] == INF) ? INF : costedge[s][v] + distedge[v][d];
-                        if (dist == INF)
-                            cout << "INF ";
-                        else
-                            cout << setw(3) << dist << " ";
+                    if (costedge[s].count(v) && distedge[v].count(d) && distedge[v][d] != INF) {
+                        int dist = costedge[s][v] + distedge[v][d];
+                        cout << setw(3) << dist << "  ";
                     } else {
-                        cout << "INF ";
+                        cout << "INF  ";
                     }
                 }
             }
             cout << "\n";
         }
-        cout << "\n";
+        cout << "\n\n";
     }
 }
+
 
 /* Print final routing table */
 void printRoutingTable() {
@@ -103,34 +99,29 @@ void printRoutingTable() {
 
 /* Distance Vector Algorithm */
 void runDistanceVector(int t) {
-    bool updated;
-    /*printDistanceTable(t); */ 
+    auto prevDist = distedge;  // Snapshot before this time step
 
-    do {
-        updated = false;
+    for (char a : router) {
+        for (char b : router) {
+            if (a == b) continue;
 
-        for (char a : router) {
-            for (char b : router) {
-                if (a == b) continue;
+            int minDist = distedge[a][b];
+            char nextHop = nextedge[a][b];
 
-                int minDist = distedge[a][b];
-                char nextHop = nextedge[a][b];
-
-                for (char v : router) {
-                    if (costedge[a].count(v) && distedge[v][b] != INF) {
-                        int newDist = costedge[a][v] + distedge[v][b];
-                        if (newDist < minDist) {
-                            minDist = newDist;
-                            nextHop = v;
-                            updated = true;
-                        }
+            for (char v : router) {
+                if (costedge[a].count(v) && prevDist[v][b] != INF) {
+                    int newDist = costedge[a][v] + prevDist[v][b];
+                    if (newDist < minDist) {
+                        minDist = newDist;
+                        nextHop = v;
                     }
                 }
-                distedge[a][b] = minDist;
-                nextedge[a][b] = nextHop;
             }
+
+            distedge[a][b] = minDist;
+            nextedge[a][b] = nextHop;
         }
-    } while (updated);
+    }
     printDistanceTable(t);
     printRoutingTable();
 }
@@ -155,6 +146,7 @@ void loadInput() {
             nextedge.clear();
             Init_edges();
             printDistanceTable(0);
+            costvector.push_back(costedge);
             continue;
         } else if (rline.rfind("END", 0) == 0) {
             break;
@@ -177,9 +169,8 @@ void loadInput() {
                     costedge[a][b] = c;
                     costedge[b][a] = c;
                 }
-                if (state == UPDATE_GRAPH) {
+                if (state == UPDATE_GRAPH)
                     costvector.push_back(costedge);
-                }
             }
         }
     }
@@ -187,10 +178,8 @@ void loadInput() {
     {
         t++;
         costedge = costvector[i];
-        Init_edges();
         runDistanceVector(t);
-    }
-
+    } 
 }
 
 /* Main */
