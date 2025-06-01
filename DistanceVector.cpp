@@ -44,8 +44,8 @@ void Init_edges() {
     }
 }
 
-// Print distance table for each router
-void printDistanceTable(int t) {
+// Print distance table for each router , also passing snapshot of distedge
+void printDistanceTable(int t, const unordered_map<char, unordered_map<char, int>>& snapshotDist) {
     for (char s : router) {
         cout << "Distance Table of router " << s << " at t=" << t << ":\n";
         cout << "     ";
@@ -55,8 +55,8 @@ void printDistanceTable(int t) {
 
         for (char d : router) {
             if (d == s) continue;
-                cout << d << "    ";
-            
+            cout << d << "    ";
+
             for (char v : router) {
                 if (v == s) continue;
 
@@ -67,8 +67,11 @@ void printDistanceTable(int t) {
                         cout << "INF  ";
                     }
                 } else {
-                    if (costedge[s].count(v) && distedge[v].count(d) && distedge[v][d] != INF) {
-                        int dist = costedge[s][v] + distedge[v][d];
+                    if (costedge[s].count(v) &&
+                        snapshotDist.count(v) &&
+                        snapshotDist.at(v).count(d) &&
+                        snapshotDist.at(v).at(d) != INF) {
+                        int dist = costedge[s][v] + snapshotDist.at(v).at(d);
                         cout << setw(3) << dist << "  ";
                     } else {
                         cout << "INF  ";
@@ -80,7 +83,6 @@ void printDistanceTable(int t) {
         cout << "\n\n";
     }
 }
-
 
 /* Print final routing table */
 void printRoutingTable() {
@@ -98,33 +100,43 @@ void printRoutingTable() {
     }
 }
 
-/* Distance Vector Algorithm */
 void runDistanceVector(int t) {
-    auto prevDist = distedge;  // Snapshot before this time step
+    // Take a deep copy snapshot before updates
+    unordered_map<char, unordered_map<char, int>> prevDist = distedge; // Old Distance before update
+    unordered_map<char, unordered_map<char, int>> newDist = distedge; // New Distance after update
+    unordered_map<char, unordered_map<char, char>> newNext = nextedge; // New Edge
 
     for (char a : router) {
         for (char b : router) {
             if (a == b) continue;
 
-            int minDist = distedge[a][b];
-            char nextHop = nextedge[a][b];
+            int minDist = prevDist[a][b];  // Start with current known distance
+            char bestNextHop = nextedge[a][b];
 
             for (char v : router) {
                 if (costedge[a].count(v) && prevDist[v][b] != INF) {
-                    int newDist = costedge[a][v] + prevDist[v][b];
-                    if (newDist < minDist) {
-                        minDist = newDist;
-                        nextHop = v;
+                    int alt = costedge[a][v] + prevDist[v][b];
+                    if (alt < minDist) {
+                        minDist = alt;
+                        bestNextHop = v;
                     }
                 }
             }
-            distedge[a][b] = minDist;
-            nextedge[a][b] = nextHop;
+            
+            newDist[a][b] = minDist;
+            newNext[a][b] = bestNextHop;
         }
     }
-    printDistanceTable(t);
+
+    // Only now commit the updates
+    printDistanceTable(t, prevDist);
+    distedge = newDist;
+    nextedge = newNext;
+
+    //printDistanceTable(t);
     printRoutingTable();
 }
+
 /* Load input from stdin continue getting till you get END */
 /* Create FSM based on the data from stdin */
 /* There are 3 main states, and updates needs to be done based on the state*/
@@ -176,7 +188,7 @@ void loadInput() {
             distedge.clear();
             nextedge.clear();
             Init_edges();
-            printDistanceTable(t);
+            printDistanceTable(t, distedge);
         }
         t++;
 
