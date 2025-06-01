@@ -47,24 +47,24 @@ void Init_edges() {
 // Print distance table for each router , also passing snapshot of distedge
 void printDistanceTable(int t, const unordered_map<char, unordered_map<char, int>>& snapshotDist) {
     for (char s : router) {
-        cout << "Distance Table of router " << s << " at t=" << t << ":\n";
-        cout << "     ";
+       /* cout << "Distance Table of router " << s << " at t=" << t << ":\n";
+        cout << "     "; */
         for (char v : router)
-            if (v != s) cout << v << "    ";
-        cout << "\n\n";
+            if (v != s) /* cout << v << "    " */;
+         cout << "\n\n"; 
 
         for (char d : router) {
             if (d == s) continue;
-            cout << d << "    ";
+            /* cout << d << "    "; */
 
             for (char v : router) {
                 if (v == s) continue;
 
                 if (t == 0) {
                     if (v == d && costedge[s].count(d)) {
-                        cout << setw(3) << costedge[s][d] << "  ";
+                        /* cout << setw(3) << costedge[s][d] << "  "; */
                     } else {
-                        cout << "INF  ";
+                        /* cout << "INF  "; */
                     }
                 } else {
                     if (costedge[s].count(v) &&
@@ -72,31 +72,32 @@ void printDistanceTable(int t, const unordered_map<char, unordered_map<char, int
                         snapshotDist.at(v).count(d) &&
                         snapshotDist.at(v).at(d) != INF) {
                         int dist = costedge[s][v] + snapshotDist.at(v).at(d);
-                        cout << setw(3) << dist << "  ";
+                        /* cout << setw(3) << dist << "  "; */
                     } else {
-                        cout << "INF  ";
+                       /* cout << "INF  "; */
                     }
                 }
             }
-            cout << "\n";
+            /* cout << "\n"; */
         }
-        cout << "\n\n";
+        /* cout << "\n\n"; */
     }
 }
 
 /* Print final routing table */
 void printRoutingTable() {
     for (char s : router) {
-        cout << "Routing Table of router " << s << ":\n";
+        /* cout << "Routing Table of router " << s << ":\n"; */
         for (char d : router) {
             if (d == s)
                 continue;
-            if (distedge[s][d] == INF)
-                cout << d << ",INF,INF\n";
-            else
-                cout << d << "," << nextedge[s][d] << "," << distedge[s][d] << "\n";
+            if (distedge[s][d] == INF) {
+                /* cout << d << ",INF,INF\n"; */
+            } else {
+                /* cout << d << "," << nextedge[s][d] << "," << distedge[s][d] << "\n"; */
+            }
         }
-        cout << "\n";
+        /* cout << "\n"; */
     }
 }
 
@@ -145,6 +146,7 @@ void loadInput() {
     char r, a, b;
     int c;
     int t = 0;
+    int count = 0;
     STATE state = GET_EDGE;
    
     while (getline(cin, rline)) {
@@ -177,6 +179,8 @@ void loadInput() {
                     costedge[a][b] = c;
                     costedge[b][a] = c;
                 }
+                if (state == START_GRAPH) 
+                   count++;
                 if (state == UPDATE_GRAPH)
                     costvector.push_back(costedge);
             }
@@ -191,8 +195,13 @@ void loadInput() {
             Init_edges();
             printDistanceTable(t, distedge);
         }
+        if (i == 0) {
+            for (int j = 0; j < count; j++) {
+                t++;
+                runDistanceVector(t);
+            }
+        }
         t++;
-
         runDistanceVector(t);
     } 
 }
