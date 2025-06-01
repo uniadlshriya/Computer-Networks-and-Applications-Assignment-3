@@ -176,6 +176,7 @@ void loadInput() {
                     costedge[a][b] = c;
                     costedge[b][a] = c;
                 }
+                cout << " Input is " << rline << "\n";
                 if (state == UPDATE_GRAPH)
                     costvector.push_back(costedge);
             }
