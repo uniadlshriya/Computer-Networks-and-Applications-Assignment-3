@@ -148,6 +148,7 @@ void loadInput() {
     STATE state = GET_EDGE;
    
     while (getline(cin, rline)) {
+        cout << "Input is " << rline << "\n";
         if (rline.rfind("START", 0) == 0) {
             state = START_GRAPH;
             continue;
@@ -176,7 +177,6 @@ void loadInput() {
                     costedge[a][b] = c;
                     costedge[b][a] = c;
                 }
-                cout << " Input is " << rline << "\n";
                 if (state == UPDATE_GRAPH)
                     costvector.push_back(costedge);
             }
