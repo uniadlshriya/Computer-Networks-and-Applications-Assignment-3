@@ -102,34 +102,33 @@ void printRoutingTable() {
 }
 
 void runDistanceVector(int t) {
-    // Take a deep copy snapshot before updates
-    unordered_map<char, unordered_map<char, int>> prevDist = distedge; // Old Distance before update
-    unordered_map<char, unordered_map<char, int>> newDist = distedge; // New Distance after update
-    unordered_map<char, unordered_map<char, char>> newNext = nextedge; // New Edge
+    unordered_map<char, unordered_map<char, int>> prevDist = distedge;
+    unordered_map<char, unordered_map<char, int>> newDist = distedge;
+    unordered_map<char, unordered_map<char, char>> newNext = nextedge;
 
     for (char a : router) {
         for (char b : router) {
             if (a == b) continue;
 
-            int minDist = prevDist[a][b];  // Start with current known distance
-            char bestNextHop = nextedge[a][b];
+            int minDist = (costedge[a].count(b) ? costedge[a][b] : INF); // updating the distance if cost gets updated
+            char bestNextHop = (costedge[a].count(b) ? b : '-'); // updating neighbour if cost gets updated
 
             for (char v : router) {
-                if (costedge[a].count(v) && prevDist[v][b] != INF) {
-                    int alt = costedge[a][v] + prevDist[v][b];
-                    if (alt < minDist) {
-                        minDist = alt;
-                        bestNextHop = v;
-                    }
+                if (!costedge[a].count(v)) continue; // must be neighbor
+                if (!prevDist.count(v) || !prevDist[v].count(b) || prevDist[v][b] == INF) continue;
+
+                int alt = costedge[a][v] + prevDist[v][b];
+                if (alt < minDist) {
+                    minDist = alt;
+                    bestNextHop = v;
                 }
             }
-            
+
             newDist[a][b] = minDist;
-            newNext[a][b] = bestNextHop;
+            newNext[a][b] = (minDist == INF ? '-' : bestNextHop);
         }
     }
 
-    // Only now commit the updates
     printDistanceTable(t, prevDist);
     distedge = newDist;
     nextedge = newNext;
@@ -144,48 +143,53 @@ void loadInput() {
     int c;
     int t = 0;
     STATE state = GET_EDGE;
-    bool updated = false;
    
-    while (getline(cin, rline)) {
-        if (rline.rfind("START", 0) == 0) {
+    while (getline(cin, rline)) 
+    {
+        if (rline.rfind("START", 0) == 0) 
+        {
             state = START_GRAPH;
             continue;
-        } else if (rline.rfind("UPDATE", 0) == 0) {
+        } else if (rline.rfind("UPDATE", 0) == 0) 
+        {
             state = UPDATE_GRAPH;
             costvector.push_back(costedge);
             continue;
-        } else if (rline.rfind("END", 0) == 0) {
-            if (updated)
-                costvector.push_back(costedge);
+        } else if (rline.rfind("END", 0) == 0)
+        {
+            costvector.push_back(costedge);
             break;
         }
 
         istringstream splitline(rline);
 
-        if (state == GET_EDGE) {
-            if (splitline >> r) {
+        if (state == GET_EDGE) 
+        {
+            if (splitline >> r) 
+            {
                 router.insert(r);
             }
-        } else if (state == START_GRAPH || state == UPDATE_GRAPH) {
-            if (splitline >> a >> b >> c) {
+        } else if (state == START_GRAPH || state == UPDATE_GRAPH) 
+        {
+            if (splitline >> a >> b >> c) 
+            {
                 router.insert(a);
                 router.insert(b);
+                    
                 if (c == -1) {
                     costedge[a].erase(b);
                     costedge[b].erase(a);
                 } else {
                     costedge[a][b] = c;
                     costedge[b][a] = c;
-                }
-                if (state == UPDATE_GRAPH)
-                    updated = true;
-                
+                }            
             }
         }
     }
-    for (std::size_t i = 0; i < costvector.size(); i++)
+    
+    for (std:: size_t k = 0; k < costvector.size(); k++ )
     {
-        costedge = costvector[i];
+        costedge = costvector[k];
         if (t == 0) {
             distedge.clear();
             nextedge.clear();
@@ -199,12 +203,10 @@ void loadInput() {
             t++;
         }
         printRoutingTable();
-    } 
+    }
 }
-
 /* Main */
 int main() {
     loadInput();
     return 0;
 }
-
