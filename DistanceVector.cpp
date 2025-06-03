@@ -115,7 +115,7 @@ void runDistanceVector(int t) {
 
             for (char v : router) {
                 if (!costedge[a].count(v)) continue; // must be neighbor
-                if (!prevDist.count(v) || !prevDist[v].count(b) || prevDist[v][b] == INF) continue;
+                if (!prevDist.count(v) || !prevDist[v].count(b) || prevDist[v][b] == INF) continue; 
 
                 int alt = costedge[a][v] + prevDist[v][b];
                 if (alt < minDist) {
@@ -143,6 +143,7 @@ void loadInput() {
     int c;
     int t = 0;
     STATE state = GET_EDGE;
+    bool updated = false;
    
     while (getline(cin, rline)) 
     {
@@ -157,7 +158,8 @@ void loadInput() {
             continue;
         } else if (rline.rfind("END", 0) == 0)
         {
-            costvector.push_back(costedge);
+            if (updated) 
+                costvector.push_back(costedge);
             break;
         }
 
@@ -184,6 +186,8 @@ void loadInput() {
                     costedge[b][a] = c;
                 }            
             }
+            if (state == UPDATE_GRAPH)
+                updated = true;
         }
     }
     
