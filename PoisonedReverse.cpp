@@ -64,14 +64,21 @@ void printDistanceTable(int t, const unordered_map<char, unordered_map<char, int
                            cout << "INF  "; 
                     }
                 } else {
+                     // Poisoned Reverse: if s reaches d via v, poison it when sending to v
+                    if (nextedge[s][d] == v) {
+                        cout << "INF  ";
+                        continue;
+                    }
+
                     if (costedge[s].count(v) &&
                         snapshotDist.count(v) &&
                         snapshotDist.at(v).count(d) &&
                         snapshotDist.at(v).at(d) != INF) {
+
                         int dist = costedge[s][v] + snapshotDist.at(v).at(d);
-                        cout << setw(3) << dist << "  "; 
+                        cout << setw(3) << dist << "  ";
                     } else {
-                        cout << "INF  "; 
+                        cout << "INF  ";
                     }
                 }
             }
@@ -107,12 +114,16 @@ void runDistanceVector(int t) {
         for (char b : router) {
             if (a == b) continue;
 
-            int minDist = (costedge[a].count(b) ? costedge[a][b] : INF); // updating the distance if cost gets updated
-            char bestNextHop = (costedge[a].count(b) ? b : '-'); // updating neighbour if cost gets updated
+            int minDist = (costedge[a].count(b) ? costedge[a][b] : INF);
+            char bestNextHop = (costedge[a].count(b) ? b : '-');
 
             for (char v : router) {
-                if (!costedge[a].count(v)) continue; // must be neighbor
-                if (!prevDist.count(v) || !prevDist[v].count(b) || prevDist[v][b] == INF) continue; 
+                if (!costedge[a].count(v)) continue; // v must be a neighbor of a
+
+                //  Poisoned Reverse: skip route info that goes back to the neighbor
+                if (nextedge[a][b] == v) continue;
+
+                if (!prevDist.count(v) || !prevDist[v].count(b) || prevDist[v][b] == INF) continue;
 
                 int alt = costedge[a][v] + prevDist[v][b];
                 if (alt < minDist) {
@@ -130,6 +141,7 @@ void runDistanceVector(int t) {
     distedge = newDist;
     nextedge = newNext;
 }
+
 
 /* Load input from stdin continue getting till you get END */
 /* Create FSM based on the data from stdin */
