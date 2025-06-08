@@ -14,6 +14,7 @@ EXEC = DistanceVector
 
 EXEC1 = PoisonedReverse
 
+all: $(EXEC) $(EXEC1)
 # Rule to compile the program
 $(EXEC): $(SRC)
 	$(CXX) $(CXXFLAGS) -o $(EXEC) $(SRC)
