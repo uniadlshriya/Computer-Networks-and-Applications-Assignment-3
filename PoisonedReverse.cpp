@@ -1,3 +1,16 @@
+// I have reused my code for Distance vector while making modifications for poisoned reverse.
+// Since detailed comments are added into DistanceVector.cpp, I am mainly focusing on the differences here
+//                                          Key Difference 
+//  Feature                      Distance Vector                         Poisoned Reverse
+// routing loops               No particular mechanism                 prevents by advertising unreachable nodes
+// count to infinity           susceptible                             avoids or reduces the impact
+// overhead                    DV shares only next hop information     PR advertises unreachable routes much larger routing table
+// convergance time            slow                                    fast
+// Robustness                  fragile                                 robust
+
+
+
+
 #include <iostream>
 #include <unordered_map>
 #include <vector>
@@ -9,13 +22,30 @@
 
 using namespace std;
 
+// Constant for Infinite, this is used to represent unreachable nodes
 const int INF = numeric_limits<int>::max();
 
+// ------------------------- GLOBAL DATA STRUCTURES -------------------------
+
+// Stores the cost for the route, itis bidirectional
 unordered_map<char, unordered_map<char, int>> costedge;
+
+// This is updated during runtime, and is used to store minimum distance between edges
 unordered_map<char, unordered_map<char, int>> distedge;
+
+// Stores the neighbourhood edge for the router
 unordered_map<char, unordered_map<char, char>> nextedge;
+
+// Vector is used to store the values of costedge, during the process of gathering the inputs
 vector<unordered_map<char, unordered_map<char, int>>> costvector;
+
+// It is a set of Char representing the nodes of the router
 set<char> router;
+
+// ------------------------- ENUMERATION FOR FSM STATE -------------------------
+// GET_EDGE     :  Initial state of the router which is used to collect the router nodes/edges
+// START_GRAPH  :  This contains the Initial values of the topology
+// UPDATE_GRAPH :  If the cost of the edge/nodes are updated or any edge is removed it is done in this state
 
 enum STATE {
     GET_EDGE,
@@ -23,7 +53,11 @@ enum STATE {
     UPDATE_GRAPH
 };
 
-/* Initialize dist and nextHop */
+// ------------------------- INITIALISATION FUNCTION -------------------------
+
+// Initialisation of the distance and neighbourhood edge.
+// The map is initialized before beginning the calculation of distance vector
+
 void Init_edges() {
     for (char u : router) {
         for (char v : router) {
@@ -41,7 +75,12 @@ void Init_edges() {
     }
 }
 
-// Print distance table for each router , also passing snapshot of distedge
+// ------------------------- PRINT DISTANCE TABLE -------------------------
+// Assignment requires 2 tables to be printed one of them is the Distance table
+// Here the distance map and time step are provided as an input.
+// The function parses the map and provides the distance table at given step time
+// It follows the format required by the assignment
+
 void printDistanceTable(int t, const unordered_map<char, unordered_map<char, int>>& snapshotDist) {
     for (char s : router) {
        cout << "Distance Table of router " << s << " at t=" << t << ":\n";
@@ -64,7 +103,7 @@ void printDistanceTable(int t, const unordered_map<char, unordered_map<char, int
                            cout << "INF  "; 
                     }
                 } else {
-                     // Poisoned Reverse: if s reaches d via v, poison it when sending to v
+                     // Poisoned Reverse: check if there is a path via v and discard it
                     if (nextedge[s][d] == v) {
                         cout << "INF  ";
                         continue;
@@ -88,7 +127,11 @@ void printDistanceTable(int t, const unordered_map<char, unordered_map<char, int
     }
 }
 
-/* Print final routing table */
+// ------------------------- PRINT ROUTING TABLE -------------------------
+// The assignment requires printing of routing table
+// routing table consists of neighbour edges if available and distance
+// where the edge is unavailable, the distance is infinite
+
 void printRoutingTable() {
     for (char s : router) {
         cout << "Routing Table of router " << s << ":\n"; 
@@ -105,6 +148,15 @@ void printRoutingTable() {
     }
 }
 
+// Perform one full iteration of the Distance Vector algorithm with poisoned reverse
+// In each iteration the distance is updated taking into account the destination, paths via v are discarded
+// During each iteration initialisation of cost is done, if there is any change in cost
+// or link is removed then the respective path is updated
+// during the iteration previous cost is taken because the runDistanceVector is called after Initialisation
+// hence the value is calculated for the next time stamp.
+// At the end of the iteration the value of distedge which is the global table is updated.
+
+
 void runDistanceVector(int t) {
     unordered_map<char, unordered_map<char, int>> prevDist = distedge;
     unordered_map<char, unordered_map<char, int>> newDist = distedge;
@@ -118,9 +170,9 @@ void runDistanceVector(int t) {
             char bestNextHop = (costedge[a].count(b) ? b : '-');
 
             for (char v : router) {
-                if (!costedge[a].count(v)) continue; // v must be a neighbor of a
+                if (!costedge[a].count(v)) continue; // v must be a neighbour of a
 
-                //  Poisoned Reverse: skip route info that goes back to the neighbor
+                //  Poisoned Reverse: skip route info which goes back to the neighbour
                 if (nextedge[a][b] == v) continue;
 
                 if (!prevDist.count(v) || !prevDist[v].count(b) || prevDist[v][b] == INF) continue;
@@ -143,9 +195,14 @@ void runDistanceVector(int t) {
 }
 
 
-/* Load input from stdin continue getting till you get END */
-/* Create FSM based on the data from stdin */
-/* There are 3 main states, and updates needs to be done based on the state*/
+// ------------------------- INPUT LOADER AND FSM -------------------------
+
+// Read input, build initial graph and simulate routing table convergence
+// Input is supplied in 3 steps cin till you get START is meant to collect the number of egdes/nodes
+// between START - UPDATE are the initial costs.
+// between UPDATE - END the cost and edges/nodes can be added or removed
+// State machine is used iterate the inputs (state machines are more readable and it is easier to split the code)
+
 void loadInput() {
     string rline;
     char r, a, b;
